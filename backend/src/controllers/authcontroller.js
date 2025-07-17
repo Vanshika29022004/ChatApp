@@ -113,3 +113,35 @@ export function logout(req, res) {
   res.clearCookie("jwt");
   res.status(200).json({ message: "Logout successful" });
 }
+
+export async function onboard(req, res) {
+  try{
+    const userId = req.user._id;
+    const { fullName,bio,nativeLanguage,learningLanguage ,location } = req.body;
+    if (!fullName || !bio || !nativeLanguage || !learningLanguage || !location) {
+      return res.status(400).json(
+        { message: "All fields are required" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId,{
+      ...req.body,
+      isOnboarded: true,
+    },{ new: true }); 
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // update the user info in  Stream 
+
+    res.status(200).json({
+      success: true,
+      message: "User onboarded successfully",
+      user: updatedUser,
+    });
+    
+  }catch (error) {
+    console.error("Error in onboarding controller:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
